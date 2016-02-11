@@ -3,8 +3,11 @@
 # Load libraries
 import numpy as np
 import pylab as pl
-from sklearn import datasets
+from sklearn import datasets, svm
 from sklearn.tree import DecisionTreeRegressor
+from sklearn.cross_validation import train_test_split
+from sklearn.metrics import fbeta_score, make_scorer, mean_squared_error
+from sklearn.grid_search import GridSearchCV
 
 ################################
 ### ADD EXTRA LIBRARIES HERE ###
@@ -68,9 +71,9 @@ def performance_metric(label, prediction):
     ###################################
     ### Step 2. YOUR CODE GOES HERE ###
     ###################################
-
+    
     # http://scikit-learn.org/stable/modules/classes.html#sklearn-metrics-metrics
-    pass
+    return mean_squared_error(label, prediction)
 
 
 def split_data(city_data):
@@ -82,10 +85,8 @@ def split_data(city_data):
     ###################################
     ### Step 3. YOUR CODE GOES HERE ###
     ###################################
-    X_train = 0
-    y_train = 0
-    X_test = 0
-    y_test = 0
+    X_train, X_test, y_train, y_test = train_test_split(X, y)
+
     return X_train, y_train, X_test, y_test
 
 
@@ -175,9 +176,11 @@ def fit_predict_model(city_data):
     X, y = city_data.data, city_data.target
 
     # Setup a Decision Tree Regressor
-    regressor = DecisionTreeRegressor()
-
+    regressor = DecisionTreeRegressor()#criterion='mse')
     parameters = {'max_depth':(1,2,3,4,5,6,7,8,9,10)}
+    
+
+    
 
     ###################################
     ### Step 4. YOUR CODE GOES HERE ###
@@ -186,17 +189,19 @@ def fit_predict_model(city_data):
     # 1. Find the best performance metric
     # should be the same as your performance_metric procedure
     # http://scikit-learn.org/stable/modules/generated/sklearn.metrics.make_scorer.html
+    mse_scorer = make_scorer(mean_squared_error)
 
     # 2. Use gridearch to fine tune the Decision Tree Regressor and find the best model
     # http://scikit-learn.org/stable/modules/generated/sklearn.grid_search.GridSearchCV.html#sklearn.grid_search.GridSearchCV
+    grid_search = GridSearchCV(regressor, parameters, scoring=mse_scorer)
 
     # Fit the learner to the training data
     print "Final Model: "
-    print reg.fit(X, y)
+    print grid_search.fit(X, y)
     
     # Use the model to predict the output of a particular sample
     x = [11.95, 0.00, 18.100, 0, 0.6590, 5.6090, 90.00, 1.385, 24, 680.0, 20.20, 332.09, 12.13]
-    y = reg.predict(x)
+    y = grid_search.predict(x)
     print "House: " + str(x)
     print "Prediction: " + str(y)
 
@@ -213,18 +218,18 @@ def main():
     explore_city_data(city_data)
 
     # Training/Test dataset split
-    # X_train, y_train, X_test, y_test = split_data(city_data)
+    X_train, y_train, X_test, y_test = split_data(city_data)
 
     # # Learning Curve Graphs
-    # max_depths = [1,2,3,4,5,6,7,8,9,10]
-    # for max_depth in max_depths:
-    #     learning_curve(max_depth, X_train, y_train, X_test, y_test)
+    max_depths = [1,2,3,4,5,6,7,8,9,10]
+    for max_depth in max_depths:
+        learning_curve(max_depth, X_train, y_train, X_test, y_test)
 
-    # # Model Complexity Graph
-    # model_complexity(X_train, y_train, X_test, y_test)
+    # Model Complexity Graph
+    model_complexity(X_train, y_train, X_test, y_test)
 
     # # Tune and predict Model
-    # fit_predict_model(city_data)
+    fit_predict_model(city_data)
 
 
 if __name__ == "__main__":
